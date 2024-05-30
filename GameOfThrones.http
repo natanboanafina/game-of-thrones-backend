@@ -1,0 +1,6 @@
+@GameOfThrones_HostAddress = http://localhost:5229
+
+GET {{GameOfThrones_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
