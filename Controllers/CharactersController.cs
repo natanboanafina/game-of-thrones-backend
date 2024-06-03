@@ -15,12 +15,19 @@ public class CharactersController : Controller
 
     // GET
     [HttpGet(Name = "GetCharacters")]
-    public async Task<ActionResult<IEnumerable<Character>>> GetCharacters() => await _context.Characters.ToListAsync();
+    public async Task<ActionResult<IEnumerable<Character>>> GetCharacters()
+    {
+        var characters = await _context.Characters
+        .Include(c => c.Data)
+        .ToListAsync();
+
+        return characters;
+    }
 
     [HttpGet("{id}", Name = "GetCharacterById")]
     public async Task<ActionResult<Character>> GetCharacter(int id)
     {
-        var character = await _context.Characters.FindAsync(id);
+        var character = await _context.Characters.Include(c => c.Data).FirstOrDefaultAsync(c => c.CharacterId == id);
 
         if (character == null)
         {
@@ -35,7 +42,7 @@ public class CharactersController : Controller
     {
         _context.Characters.Add(character);
         await _context.SaveChangesAsync();
-        return Ok(await _context.Characters.ToListAsync());
+        return Ok(await _context.Characters.Include(c => c.Data).ToListAsync());
     }
 
     [HttpPut("{id}")]
@@ -46,14 +53,14 @@ public class CharactersController : Controller
             return BadRequest();
         }
 
-        var existingCharacter = await _context.Characters.FindAsync(id);
+        var existingCharacter = await _context.Characters.Include(c => c.Data).FirstOrDefaultAsync(c => c.CharacterId == id);
         if (existingCharacter == null)
         {
             return NotFound();
         }
 
-        existingCharacter.Name = character.Name;
-        existingCharacter.Description = character.Description;
+        existingCharacter.Data.Name = character.Data.Name;
+        existingCharacter.Data.Description = character.Data.Description;
 
         try
         {
@@ -70,7 +77,7 @@ public class CharactersController : Controller
                 throw new DbUpdateConcurrencyException("Ocorreu um erro de concorrência durante a atualização do cliente.");
             }
         }
-        return NoContent();
+        return Ok(existingCharacter);
     }
 
     [HttpDelete("{id}")]
@@ -84,7 +91,7 @@ public class CharactersController : Controller
 
         _context.Characters.Remove(character);
         await _context.SaveChangesAsync();
-        return NoContent();
+        return Ok($"Personagem de id {id} deletado!");
     }
     private bool CharacterExists(int id)
     {

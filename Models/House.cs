@@ -1,9 +1,13 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 public class House
 {
     public int HouseId { get; set; }
     public required string HouseName { get; set; }
 
-    public required string HouseLeader { get; set; }
-    public required string HouseDescription { get; set; }
+    public int DataId { get; set; }
+
+    [ForeignKey("DataId")]
+    public required virtual Data Data { get; set; }
 
 }
