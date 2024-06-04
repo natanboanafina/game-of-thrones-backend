@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Text.Encodings.Web;
+
 
 [ApiController]
 [Route("api/[controller]")]
@@ -34,7 +31,7 @@ public class CharactersController : Controller
             return NotFound();
         }
 
-        return character;
+        return Ok(character);
     }
 
     [HttpPost]
@@ -53,14 +50,20 @@ public class CharactersController : Controller
             return BadRequest();
         }
 
-        var existingCharacter = await _context.Characters.Include(c => c.Data).FirstOrDefaultAsync(c => c.CharacterId == id);
-        if (existingCharacter == null)
+        var hasCharacter = await _context.Characters.Include(c => c.Data).FirstOrDefaultAsync(c => c.CharacterId == id);
+        if (hasCharacter == null)
         {
             return NotFound();
         }
 
-        existingCharacter.Data.Name = character.Data.Name;
-        existingCharacter.Data.Description = character.Data.Description;
+        hasCharacter.Data.Name = character.Data.Name;
+        hasCharacter.Data.Image = character.Data.Image;
+        hasCharacter.Data.Description = character.Data.Description;
+        hasCharacter.Titles = character.Titles;
+        hasCharacter.Gender = character.Gender;
+        hasCharacter.House = character.House;
+        hasCharacter.Culture = character.Culture;
+        hasCharacter.Born = character.Born;
 
         try
         {
@@ -77,7 +80,7 @@ public class CharactersController : Controller
                 throw new DbUpdateConcurrencyException("Ocorreu um erro de concorrência durante a atualização do cliente.");
             }
         }
-        return Ok(existingCharacter);
+        return Ok(hasCharacter);
     }
 
     [HttpDelete("{id}")]

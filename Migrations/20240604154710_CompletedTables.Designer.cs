@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameOfThrones.Migrations
 {
     [DbContext(typeof(GameOfThronesContext))]
-    partial class GameOfThronesContextModelSnapshot : ModelSnapshot
+    [Migration("20240604154710_CompletedTables")]
+    partial class CompletedTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,23 +87,6 @@ namespace GameOfThrones.Migrations
                     b.ToTable("Datas");
                 });
 
-            modelBuilder.Entity("Dragon", b =>
-                {
-                    b.Property<int>("DragonId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("DataId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Owner")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("DragonId");
-
-                    b.ToTable("Dragons");
-                });
-
             modelBuilder.Entity("House", b =>
                 {
                     b.Property<int>("HouseId")
@@ -131,17 +117,6 @@ namespace GameOfThrones.Migrations
                     b.HasOne("Data", "Data")
                         .WithMany()
                         .HasForeignKey("DataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Data");
-                });
-
-            modelBuilder.Entity("Dragon", b =>
-                {
-                    b.HasOne("Data", "Data")
-                        .WithMany()
-                        .HasForeignKey("DragonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

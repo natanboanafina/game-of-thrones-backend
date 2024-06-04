@@ -9,5 +9,7 @@ public class House
 
     [ForeignKey("DataId")]
     public required virtual Data Data { get; set; }
+    public required string Lord { get; set; }
+    public required string Region { get; set; }
 
 }

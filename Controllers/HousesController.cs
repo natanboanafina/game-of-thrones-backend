@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +16,7 @@ public class HousesController : Controller
         .Include(h => h.Data)
         .ToListAsync();
 
-        return houses;
+        return Ok(houses);
     }
 
     [HttpGet("{id}", Name = "GetHouseById")]
@@ -49,14 +48,17 @@ public class HousesController : Controller
             return BadRequest();
         }
 
-        var existingHouse = await _context.Houses.Include(h => h.Data).FirstOrDefaultAsync(h => h.HouseId == id);
-        if (existingHouse == null)
+        var hasHouse = await _context.Houses.Include(h => h.Data).FirstOrDefaultAsync(h => h.HouseId == id);
+        if (hasHouse == null)
         {
             return NotFound();
         }
 
-        existingHouse.Data.Name = house.Data.Name;
-        existingHouse.Data.Description = house.Data.Description;
+        hasHouse.Data.Name = house.Data.Name;
+        hasHouse.Data.Image = house.Data.Image;
+        hasHouse.Data.Description = house.Data.Description;
+        hasHouse.Lord = house.Lord;
+        hasHouse.Region = house.Region;
 
         try
         {
@@ -73,7 +75,7 @@ public class HousesController : Controller
                 throw new DbUpdateConcurrencyException("Ocorreu um erro de concorrência durante a atualização do cliente.");
             }
         }
-        return Ok(existingHouse); // Retorna os dados atualizados
+        return Ok(hasHouse); // Retorna os dados atualizados
     }
 
     [HttpDelete("{id}")]

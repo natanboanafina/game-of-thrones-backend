@@ -5,6 +5,7 @@ public class GameOfThronesContext : DbContext
     public DbSet<Character> Characters { get; set; }
     public DbSet<House> Houses { get; set; }
     public DbSet<Data> Datas { get; set; }
+    public DbSet<Dragon> Dragons { get; set; }
 
     public GameOfThronesContext() { }
     public GameOfThronesContext(DbContextOptions<GameOfThronesContext> options) : base(options) { }
@@ -27,6 +28,11 @@ public class GameOfThronesContext : DbContext
         .HasOne(h => h.Data)
         .WithMany()
         .HasForeignKey(h => h.HouseId);
+
+        modelBuilder.Entity<Dragon>()
+        .HasOne(d => d.Data)
+        .WithMany()
+        .HasForeignKey(d => d.DragonId);
 
         base.OnModelCreating(modelBuilder);
     }
