@@ -6,8 +6,15 @@ using Microsoft.EntityFrameworkCore;
 public class HousesController : Controller
 {
     private readonly GameOfThronesContext _context;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IFileService _fileService;
 
-    public HousesController(GameOfThronesContext context) => _context = context;
+    public HousesController(GameOfThronesContext context, IFileService fileService, IWebHostEnvironment environment)
+    {
+        _context = context;
+        _environment = environment;
+        _fileService = fileService;
+    }
 
     [HttpGet(Name = "GetHouses")]
     public async Task<ActionResult<IEnumerable<House>>> GetHouses()
@@ -22,7 +29,9 @@ public class HousesController : Controller
     [HttpGet("{id}", Name = "GetHouseById")]
     public async Task<ActionResult<House>> GetHouse(int id)
     {
-        var house = await _context.Houses.Include(h => h.HouseId).FirstOrDefaultAsync(h => h.HouseId == id);
+        var house = await _context.Houses
+        .Include(h => h.HouseId)
+        .FirstOrDefaultAsync(h => h.HouseId == id);
 
         if (house == null)
         {
@@ -32,12 +41,28 @@ public class HousesController : Controller
     }
 
     [HttpPost]
-    public async Task<ActionResult<House>> PostHouse(House house)
+    public async Task<ActionResult<House>> PostHouse([FromForm] House house, IFormFile imageFile)
     {
+        if (imageFile != null)
+        {
+            // salvar as imagem
+            var result = await _fileService.SaveImageAsync(imageFile, "Houses");
+
+            if (result.Item1 == 0)
+            {
+                // Retornar um erro se a imagem não puder ser salva
+                return BadRequest(result.Item2);
+            }
+
+            // Definir o nome do arquivo da imagem na entidade Data
+            house.Data.Image = result.Item2;
+        }
+
         _context.Houses.Add(house);
         await _context.SaveChangesAsync();
 
-        return Ok(await _context.Houses.Include(h => h.HouseId).ToListAsync());
+        // return Ok(await _context.Houses.Include(h => h.HouseId).ToListAsync());
+        return CreatedAtAction(nameof(GetHouse), new { id = house.HouseId }, house);
     }
 
     [HttpPut("{id}")]
@@ -48,14 +73,21 @@ public class HousesController : Controller
             return BadRequest();
         }
 
-        var hasHouse = await _context.Houses.Include(h => h.Data).FirstOrDefaultAsync(h => h.HouseId == id);
+        var hasHouse = await _context
+        .Houses.Include(h => h.Data)
+        .FirstOrDefaultAsync(h => h.HouseId == id);
+
         if (hasHouse == null)
         {
             return NotFound();
         }
 
         hasHouse.Data.Name = house.Data.Name;
-        hasHouse.Data.Image = house.Data.Image;
+
+        if (!string.IsNullOrEmpty(house.Data.Image))
+        {
+            hasHouse.Data.Image = house.Data.Image;
+        }
         hasHouse.Data.Description = house.Data.Description;
         hasHouse.Lord = house.Lord;
         hasHouse.Region = house.Region;
@@ -81,18 +113,35 @@ public class HousesController : Controller
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteHouse(int id)
     {
-        var house = await _context.Houses.FindAsync(id);
+        var house = await _context
+        .Houses
+        .FindAsync(id);
+
         if (house == null)
         {
             return NotFound();
         }
+
+        if (!string.IsNullOrEmpty(house.Data.Image))
+        {
+            var fileService = new FileService(_environment);
+            await fileService.DeleteImageAsync(house.Data.Image, "Houses");
+        }
+
         _context.Houses.Remove(house);
         await _context.SaveChangesAsync();
         return NoContent();
     }
 
+    [NonAction]
     private bool HouseExists(int id)
     {
         return _context.Houses.Any(e => e.HouseId == id);
     }
+
+    // [NonAction]
+    // private string GetFilePath(string HouseCode)
+    // {
+    //     return _environment.WebRootPath + "\\Uploads\\House\\" + HouseCode;
+    // }
 }

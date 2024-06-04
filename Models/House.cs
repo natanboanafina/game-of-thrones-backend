@@ -12,4 +12,5 @@ public class House
     public required string Lord { get; set; }
     public required string Region { get; set; }
 
+
 }

@@ -1,11 +1,19 @@
 {
   "Version": 1,
-  "Hash": "fTemO1F2EmkB+C4lPZNDEuN6+ybQuLx5Er23kYwWowE=",
+  "Hash": "bo/l0MFUFT65tVTNeGQFqYU8YcEBo9DoXwUas9IKMvM=",
   "Source": "GameOfThrones",
   "BasePath": "_content/GameOfThrones",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "GameOfThrones\\wwwroot",
+      "Source": "GameOfThrones",
+      "ContentRoot": "C:\\Users\\natan\\Desktop\\Projetos\\GOT-backend\\GameOfThrones\\wwwroot\\",
+      "BasePath": "_content/GameOfThrones",
+      "Pattern": "**"
+    }
+  ],
   "Assets": []
 }
