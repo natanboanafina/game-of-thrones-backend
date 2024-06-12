@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DragonsController : Controller
+public class DragonsController : ControllerBase
 {
     private readonly GameOfThronesContext _context;
     public DragonsController(GameOfThronesContext context) => _context = context;

@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-public class GameOfThronesContext : DbContext
+public class GameOfThronesContext : IdentityDbContext<IdentityUser>
 {
     public DbSet<Character> Characters { get; set; }
     public DbSet<House> Houses { get; set; }
     public DbSet<Data> Datas { get; set; }
     public DbSet<Dragon> Dragons { get; set; }
+    // public DbSet<LoginModel> Logins { get; set; }
 
     public GameOfThronesContext() { }
     public GameOfThronesContext(DbContextOptions<GameOfThronesContext> options) : base(options) { }

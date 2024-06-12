@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/[controller]")]
-public class HousesController : Controller
+public class HousesController : ControllerBase
 {
     private readonly GameOfThronesContext _context;
     private readonly IWebHostEnvironment _environment;
