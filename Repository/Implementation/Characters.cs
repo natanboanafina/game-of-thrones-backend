@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 public class Characters : ICharacters

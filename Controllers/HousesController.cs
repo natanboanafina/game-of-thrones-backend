@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -5,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/[controller]")]
 public class HousesController : ControllerBase
 {
+
     private readonly GameOfThronesContext _context;
     private readonly IWebHostEnvironment _environment;
     private readonly IFileService _fileService;
@@ -17,6 +19,7 @@ public class HousesController : ControllerBase
     }
 
     [HttpGet(Name = "GetHouses")]
+    [Authorize(Roles = "User,Admin")]
     public async Task<ActionResult<IEnumerable<House>>> GetHouses()
     {
         var houses = await _context.Houses
@@ -27,6 +30,7 @@ public class HousesController : ControllerBase
     }
 
     [HttpGet("{id}", Name = "GetHouseById")]
+    [Authorize(Roles = "User,Admin")]
     public async Task<ActionResult<House>> GetHouse(int id)
     {
         var house = await _context.Houses
@@ -41,6 +45,7 @@ public class HousesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<House>> PostHouse([FromForm] House house, IFormFile imageFile)
     {
         if (imageFile != null)
@@ -66,6 +71,7 @@ public class HousesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> PutHouse(int id, House house)
     {
         if (id != house.HouseId)
@@ -111,6 +117,7 @@ public class HousesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteHouse(int id)
     {
         var house = await _context

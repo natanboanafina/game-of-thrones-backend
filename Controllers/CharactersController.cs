@@ -9,10 +9,12 @@ public class CharactersController : ControllerBase
 {
 
     private readonly ICharacters _charactersRepository;
+    private readonly IFileService _fileService;
 
-    public CharactersController(ICharacters charactersRepository)
+    public CharactersController(ICharacters charactersRepository, IFileService fileService)
     {
         _charactersRepository = charactersRepository;
+        _fileService = fileService;
     }
 
     // GET
@@ -73,8 +75,13 @@ public class CharactersController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")] // Apenas administradores podem acessar
-    public async Task<ActionResult<Character>> PostCharacter(CharactersDto characterDto)
+    public async Task<ActionResult<Character>> PostCharacter([FromForm] CharactersDto characterDto, [FromForm] IFormFile imageFile)
     {
+        var result = await _fileService.SaveImageAsync(imageFile, "characters");
+        if (result.Item1 == 0)
+        {
+            return BadRequest(result.Item2);
+        }
         var character = new Character
         {
             DataId = characterDto.DataId,
@@ -82,7 +89,7 @@ public class CharactersController : ControllerBase
             {
                 DataId = characterDto.Data.DataId,
                 Name = characterDto.Data.Name,
-                Image = characterDto.Data.Image,
+                Image = result.Item2,
                 Description = characterDto.Data.Description
             },
             Titles = characterDto.Titles,
@@ -100,26 +107,34 @@ public class CharactersController : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")] // Apenas administradores podem acessar
-    public async Task<IActionResult> PutCharacter(int id, CharactersDto characterDto)
+    public async Task<IActionResult> PutCharacter(int id, [FromForm] CharactersDto characterDto, [FromForm] IFormFile? imageFile)
     {
         if (id != characterDto.CharacterId)
         {
             return BadRequest();
         }
+
         var character = await _charactersRepository.GetByIdAsync(id);
         if (character == null)
         {
             return NotFound();
         }
 
-        character.DataId = characterDto.DataId;
-        character.Data = new Data
+        if (imageFile != null)
         {
-            DataId = characterDto.DataId,
-            Name = characterDto.Data.Name,
-            Image = characterDto.Data.Image,
-            Description = characterDto.Data.Description,
-        };
+            await _fileService.DeleteImageAsync(character.Data.Image, "characters");
+            var result = await _fileService.SaveImageAsync(imageFile, "characters");
+
+            if (result.Item1 == 0)
+            {
+                return BadRequest(result.Item2);
+            }
+            character.Data.Image = result.Item2;
+        }
+
+        character.DataId = characterDto.DataId;
+        character.Data.Name = characterDto.Data.Name;
+        character.Data.Description = characterDto.Data.Description;
         character.Titles = characterDto.Titles;
         character.Gender = characterDto.Gender;
         character.House = characterDto.House;
@@ -154,6 +169,7 @@ public class CharactersController : ControllerBase
             return NotFound();
         }
 
+        await _fileService.DeleteImageAsync(character.Data.Image, "characters");
         await _charactersRepository.DeleteAsync(id);
         return Ok($"Personagem de id {id} deletado!");
     }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GameOfThrones")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+efc406cdfd0d7df96bf6eef06c42bc66c20b90c1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+906b6638a1000db93efa2dcad336a5e1b7c9da8f")]
 [assembly: System.Reflection.AssemblyProductAttribute("GameOfThrones")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GameOfThrones")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
