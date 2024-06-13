@@ -75,11 +75,14 @@ public class CharactersController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")] // Apenas administradores podem acessar
-    public async Task<ActionResult<Character>> PostCharacter([FromForm] CharactersDto characterDto, [FromForm] IFormFile imageFile)
+    public async Task<ActionResult<Character>> PostCharacter([FromForm] CharactersDto characterDto, IFormFile imageFile)
     {
         var result = await _fileService.SaveImageAsync(imageFile, "characters");
+        //  é verificado. Se for 0, isso indica que a operação de salvar a imagem falhou.
         if (result.Item1 == 0)
         {
+            //Isso significa que a resposta HTTP será 400 Bad Request, e o corpo da resposta conterá result.Item2, que é a mensagem de erro fornecida pelo FileService.
+            //result.Item2 contém a mensagem de erro detalhada, que é mais informativa para o cliente que está fazendo a requisição. result.Item1 é apenas um código de status (0 ou 1), que não é útil sem contexto adicional.
             return BadRequest(result.Item2);
         }
         var character = new Character
@@ -107,7 +110,7 @@ public class CharactersController : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")] // Apenas administradores podem acessar
-    public async Task<IActionResult> PutCharacter(int id, [FromForm] CharactersDto characterDto, [FromForm] IFormFile? imageFile)
+    public async Task<IActionResult> PutCharacter(int id, [FromForm] CharactersDto characterDto, IFormFile imageFile)
     {
         if (id != characterDto.CharacterId)
         {

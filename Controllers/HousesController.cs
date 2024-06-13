@@ -7,104 +7,147 @@ using Microsoft.EntityFrameworkCore;
 public class HousesController : ControllerBase
 {
 
-    private readonly GameOfThronesContext _context;
-    private readonly IWebHostEnvironment _environment;
+    private readonly IHouses _housesRepository;
     private readonly IFileService _fileService;
+    private readonly IWebHostEnvironment _environment;
 
-    public HousesController(GameOfThronesContext context, IFileService fileService, IWebHostEnvironment environment)
+    public HousesController(IHouses housesRepository, IFileService fileService, IWebHostEnvironment environment)
     {
-        _context = context;
-        _environment = environment;
+        _housesRepository = housesRepository;
         _fileService = fileService;
+        _environment = environment;
     }
 
     [HttpGet(Name = "GetHouses")]
     [Authorize(Roles = "User,Admin")]
     public async Task<ActionResult<IEnumerable<House>>> GetHouses()
     {
-        var houses = await _context.Houses
-        .Include(h => h.Data)
-        .ToListAsync();
+        var houses = await _housesRepository.GetAllAsync();
+        var housesDto = houses.Select(h => new HousesDto
+        {
+            HouseId = h.HouseId,
+            HouseName = h.HouseName,
+            Data = new DataDto
+            {
+                DataId = h.Data.DataId,
+                Name = h.Data.Name,
+                Description = h.Data.Description,
+                Image = h.Data.Image,
+            },
+            Lord = h.Lord,
+            Region = h.Region,
 
-        return Ok(houses);
+        });
+        // var houses = await _context.Houses
+        // .Include(h => h.Data)
+        // .ToListAsync();
+
+        return Ok(housesDto);
     }
 
     [HttpGet("{id}", Name = "GetHouseById")]
     [Authorize(Roles = "User,Admin")]
     public async Task<ActionResult<House>> GetHouse(int id)
     {
-        var house = await _context.Houses
-        .Include(h => h.HouseId)
-        .FirstOrDefaultAsync(h => h.HouseId == id);
+        var house = await _housesRepository.GetByIdAsync(id);
+        if (house == null)
+        {
+            return NotFound();
+        }
+
+        var houseDto = new HousesDto
+        {
+            HouseId = house.HouseId,
+            HouseName = house.HouseName,
+            Data = new DataDto
+            {
+                DataId = house.Data.DataId,
+                Name = house.Data.Name,
+                Image = house.Data.Image,
+                Description = house.Data.Description,
+            },
+            Lord = house.Lord,
+            Region = house.Region,
+        };
+        return Ok(houseDto);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<House>> PostHouse([FromForm] HousesDto houseDto, IFormFile imageFile)
+    {
+        var result = await _fileService.SaveImageAsync(imageFile, "houses");
+        if (result.Item1 == 0)
+        {
+            return BadRequest(result.Item2);
+        }
+
+        var house = new House
+        {
+            HouseId = houseDto.HouseId,
+            HouseName = houseDto.HouseName,
+            Data = new Data
+            {
+                DataId = houseDto.Data.DataId,
+                Name = houseDto.Data.Name,
+                Image = result.Item2,
+                Description = houseDto.Data.Description,
+            },
+            Lord = houseDto.Lord,
+            Region = houseDto.Region,
+        };
+
+        await _housesRepository.AddAsync(house);
+
+        return CreatedAtAction(
+            "GetHouseById",
+            new { id = house.HouseId },
+            houseDto
+            );
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> PutHouse(int id, [FromForm] HousesDto houseDto, IFormFile imageFile)
+    {
+        if (id != houseDto.HouseId)
+        {
+            return BadRequest();
+        }
+
+        var house = await _housesRepository.GetByIdAsync(id);
 
         if (house == null)
         {
             return NotFound();
         }
-        return Ok(house);
-    }
 
-    [HttpPost]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<House>> PostHouse([FromForm] House house, IFormFile imageFile)
-    {
         if (imageFile != null)
         {
-            // salvar as imagem
-            var result = await _fileService.SaveImageAsync(imageFile, "Houses");
+            await _fileService.DeleteImageAsync(house.Data.Image, "houses");
+            var result = await _fileService.SaveImageAsync(imageFile, "houses");
 
             if (result.Item1 == 0)
             {
-                // Retornar um erro se a imagem não puder ser salva
                 return BadRequest(result.Item2);
             }
 
-            // Definir o nome do arquivo da imagem na entidade Data
             house.Data.Image = result.Item2;
         }
 
-        _context.Houses.Add(house);
-        await _context.SaveChangesAsync();
-
-        // return Ok(await _context.Houses.Include(h => h.HouseId).ToListAsync());
-        return CreatedAtAction(nameof(GetHouse), new { id = house.HouseId }, house);
-    }
-
-    [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> PutHouse(int id, House house)
-    {
-        if (id != house.HouseId)
-        {
-            return BadRequest();
-        }
-
-        var hasHouse = await _context
-        .Houses.Include(h => h.Data)
-        .FirstOrDefaultAsync(h => h.HouseId == id);
-
-        if (hasHouse == null)
-        {
-            return NotFound();
-        }
-
-        hasHouse.Data.Name = house.Data.Name;
-
-        if (!string.IsNullOrEmpty(house.Data.Image))
-        {
-            hasHouse.Data.Image = house.Data.Image;
-        }
-        hasHouse.Data.Description = house.Data.Description;
-        hasHouse.Lord = house.Lord;
-        hasHouse.Region = house.Region;
+        house.HouseId = houseDto.DataId;
+        house.Data.Name = houseDto.Data.Name;
+        house.Data.Description = houseDto.Data.Description;
+        house.Lord = houseDto.Lord;
+        house.Region = houseDto.Region;
 
         try
         {
-            await _context.SaveChangesAsync();
+            await _housesRepository.UpdateAsync(house);
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!HouseExists(id))
+            if (!await _housesRepository.HasHousesAsync(id))
             {
                 return NotFound();
             }
@@ -113,42 +156,21 @@ public class HousesController : ControllerBase
                 throw new DbUpdateConcurrencyException("Ocorreu um erro de concorrência durante a atualização do cliente.");
             }
         }
-        return Ok(hasHouse); // Retorna os dados atualizados
+        return Ok(houseDto); // Retorna os dados atualizados
     }
 
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteHouse(int id)
     {
-        var house = await _context
-        .Houses
-        .FindAsync(id);
-
+        var house = await _housesRepository.GetByIdAsync(id);
         if (house == null)
         {
             return NotFound();
         }
 
-        if (!string.IsNullOrEmpty(house.Data.Image))
-        {
-            var fileService = new FileService(_environment);
-            await fileService.DeleteImageAsync(house.Data.Image, "Houses");
-        }
-
-        _context.Houses.Remove(house);
-        await _context.SaveChangesAsync();
-        return NoContent();
+        await _fileService.DeleteImageAsync(house.Data.Image, "houses");
+        await _housesRepository.DeleteAsync(id);
+        return Ok($"Casa de id{id} deletada!");
     }
-
-    [NonAction]
-    private bool HouseExists(int id)
-    {
-        return _context.Houses.Any(e => e.HouseId == id);
-    }
-
-    // [NonAction]
-    // private string GetFilePath(string HouseCode)
-    // {
-    //     return _environment.WebRootPath + "\\Uploads\\House\\" + HouseCode;
-    // }
 }
