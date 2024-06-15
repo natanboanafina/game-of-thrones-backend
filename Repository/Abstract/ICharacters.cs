@@ -5,5 +5,5 @@ public interface ICharacters
     Task AddAsync(Character character);
     Task UpdateAsync(Character character);
     Task DeleteAsync(int id);
-    Task<bool> HasCharactersAsync(int id);
+    Task<bool> HasCharacterAsync(int id);
 }

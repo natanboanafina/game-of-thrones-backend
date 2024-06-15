@@ -46,7 +46,7 @@ public class Characters : ICharacters
         }
     }
 
-    public async Task<bool> HasCharactersAsync(int id)
+    public async Task<bool> HasCharacterAsync(int id)
     {
         return await _context.Characters.AnyAsync(e => e.CharacterId == id);
     }

@@ -5,5 +5,5 @@ public interface IHouses
     Task AddAsync(House house);
     Task UpdateAsync(House house);
     Task DeleteAsync(int id);
-    Task<bool> HasHousesAsync(int id);
+    Task<bool> HasHouseAsync(int id);
 }

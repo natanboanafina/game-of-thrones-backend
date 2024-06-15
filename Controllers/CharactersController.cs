@@ -53,6 +53,7 @@ public class CharactersController : ControllerBase
         {
             return NotFound();
         }
+
         var characterDto = new CharactersDto
         {
             CharacterId = character.CharacterId,
@@ -105,7 +106,10 @@ public class CharactersController : ControllerBase
         await _charactersRepository.AddAsync(character);
 
         // retorna o caminho para o recurso criado junto com o próprio recurso
-        return CreatedAtAction("GetCharacterById", new { id = character.CharacterId }, characterDto);
+        return CreatedAtAction("GetCharacterById",
+        new { id = character.CharacterId },
+        characterDto
+        );
     }
 
     [HttpPut("{id}")]
@@ -150,7 +154,7 @@ public class CharactersController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!await _charactersRepository.HasCharactersAsync(id))
+            if (!await _charactersRepository.HasCharacterAsync(id))
             {
                 return NotFound();
             }

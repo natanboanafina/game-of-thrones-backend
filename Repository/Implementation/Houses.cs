@@ -56,7 +56,7 @@ public class Houses : IHouses
             await _context.SaveChangesAsync();
         }
     }
-    public async Task<bool> HasHousesAsync(int id)
+    public async Task<bool> HasHouseAsync(int id)
     {
         return await _context.Houses.AnyAsync(h => h.HouseId == id);
     }

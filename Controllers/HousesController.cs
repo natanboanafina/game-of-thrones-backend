@@ -38,9 +38,6 @@ public class HousesController : ControllerBase
             Region = h.Region,
 
         });
-        // var houses = await _context.Houses
-        // .Include(h => h.Data)
-        // .ToListAsync();
 
         return Ok(housesDto);
     }
@@ -147,7 +144,7 @@ public class HousesController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!await _housesRepository.HasHousesAsync(id))
+            if (!await _housesRepository.HasHouseAsync(id))
             {
                 return NotFound();
             }
